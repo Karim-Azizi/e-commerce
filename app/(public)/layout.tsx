@@ -1,5 +1,5 @@
 // app/(public)/layout.tsx
-import { createPublicClient, getPublicStorageUrl } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/server'
 import { PublicNavbar } from '@/components/public/navbar'
 import { PublicFooter } from '@/components/public/footer'
 
@@ -39,15 +39,48 @@ export default async function PublicLayout({
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      {/* Public Navigation */}
-      <PublicNavbar user={currentUser} />
+    <div className="flex min-h-screen flex-col bg-gray-50">
 
-      {/* Main Content */}
-      <main className="relative z-10 flex-1">{children}</main>
+      {/* ✅ MOBILE: Sticky Alibaba-style header */}
+      <div className="sticky top-0 z-50 bg-white shadow-sm md:static md:shadow-none">
+        <PublicNavbar user={currentUser} />
+      </div>
 
-      {/* Public Footer */}
-      <PublicFooter user={currentUser} />
+      {/* ✅ MAIN CONTENT */}
+      <main className="relative z-10 flex-1 pb-20 md:pb-0">
+        {children}
+      </main>
+
+      {/* ✅ DESKTOP FOOTER ONLY */}
+      <div className="hidden md:block">
+        <PublicFooter user={currentUser} />
+      </div>
+
+      {/* ✅ MOBILE BOTTOM NAV SPACE (Alibaba style) */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t md:hidden">
+        <div className="flex justify-around py-2 text-xs text-gray-600">
+          <div className="flex flex-col items-center">
+            <span>🏠</span>
+            <span>Home</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span>👁️</span>
+            <span>Tips</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span>💬</span>
+            <span>Chat</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span>🛒</span>
+            <span>Cart</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span>👤</span>
+            <span>Account</span>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

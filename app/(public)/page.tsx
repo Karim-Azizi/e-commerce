@@ -1,13 +1,11 @@
+// app/(public)/page.tsx
+
 import Link from 'next/link'
 import { createPublicClient, getPublicStorageUrl } from '@/lib/supabase/server'
 import { PublicHero } from '@/components/public/hero'
 import { ProductCard } from '@/components/public/product-card'
 import { VendorCard } from '@/components/public/vendor-card'
 import { CategoryCard } from '@/components/public/category-card'
-
-/* -------------------------------------------------------------------------- */
-/*                                   TYPES                                    */
-/* -------------------------------------------------------------------------- */
 
 type ProductImage = {
   image_url: string | null
@@ -47,16 +45,12 @@ type CategoryRow = {
   slug: string | null
 }
 
-/* -------------------------------------------------------------------------- */
-/*                              IMAGE RESOLUTION                              */
-/* -------------------------------------------------------------------------- */
-
+/* ---------------- IMAGE ---------------- */
 function resolveProductImageSrc(src?: string | null): string {
   const value = String(src || '').trim()
 
   if (!value) return '/placeholder.png'
 
-  // Already a valid public URL
   if (
     value.startsWith('http://') ||
     value.startsWith('https://') ||
@@ -65,7 +59,6 @@ function resolveProductImageSrc(src?: string | null): string {
     return value
   }
 
-  // Resolve Supabase Storage path
   const publicUrl = getPublicStorageUrl('products', value)
   return publicUrl || '/placeholder.png'
 }
@@ -86,14 +79,10 @@ function getProductImage(images: ProductImage[] | null | undefined): string {
   return primary?.image_url || normalized[0].image_url || '/placeholder.png'
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                   PAGE                                     */
-/* -------------------------------------------------------------------------- */
-
+/* ---------------- PAGE ---------------- */
 export default async function HomePage() {
   const supabase = await createPublicClient()
 
-  /* ----------------------------- Latest Products ---------------------------- */
   const { data: latestProductsData } = await supabase
     .from('products')
     .select(`
@@ -115,7 +104,6 @@ export default async function HomePage() {
 
   const latestProducts = (latestProductsData || []) as LatestProductRow[]
 
-  /* ----------------------------- Vendor Mapping ----------------------------- */
   const vendorIds = Array.from(
     new Set(
       latestProducts
@@ -142,7 +130,6 @@ export default async function HomePage() {
     )
   }
 
-  /* ----------------------------- Featured Vendors --------------------------- */
   const { data: featuredSuppliersData } = await supabase
     .from('vendors')
     .select(
@@ -154,7 +141,6 @@ export default async function HomePage() {
   const featuredSuppliers =
     (featuredSuppliersData || []) as FeaturedSupplierRow[]
 
-  /* ----------------------------- Categories -------------------------------- */
   const { data: categoriesData } = await supabase
     .from('categories')
     .select('id, name, slug')
@@ -163,38 +149,32 @@ export default async function HomePage() {
 
   const categories = (categoriesData || []) as CategoryRow[]
 
-  /* -------------------------------------------------------------------------- */
-  /*                                   RENDER                                   */
-  /* -------------------------------------------------------------------------- */
-
   return (
-    <main className="bg-white text-slate-900">
-      <PublicHero />
+    <main className="bg-gray-50 text-slate-900">
 
-      {/* ===================== PRODUCTS ===================== */}
-      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-amber-600">
-              Product Discovery
-            </p>
-            <h2 className="mt-2 text-3xl font-bold tracking-tight">
-              Recommended products
-            </h2>
-            <p className="mt-2 max-w-2xl text-sm text-slate-600">
-              Explore active product listings from suppliers across the marketplace.
-            </p>
-          </div>
+      {/* DESKTOP HERO ONLY */}
+      <div className="hidden md:block">
+        <PublicHero />
+      </div>
+
+      {/* ================= PRODUCTS ================= */}
+      <section className="mx-auto max-w-7xl px-3 py-6 sm:px-6 lg:px-8">
+
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-base font-semibold md:text-3xl">
+            Recommended products
+          </h2>
 
           <Link
             href="/products"
-            className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-900 transition hover:bg-slate-50"
+            className="text-xs font-medium text-orange-500 md:text-sm"
           >
-            View all products
+            View all
           </Link>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {/* MOBILE 2 COL / DESKTOP SAME */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4 md:gap-6">
           {latestProducts.map((product) => (
             <ProductCard
               key={product.id}
@@ -215,56 +195,52 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ===================== SUPPLIERS ===================== */}
-      <section className="border-y border-slate-200 bg-slate-50">
-        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-amber-600">
-                Supplier Network
-              </p>
-              <h2 className="mt-2 text-3xl font-bold tracking-tight">
-                Trusted suppliers
-              </h2>
-            </div>
+      {/* ================= SUPPLIERS ================= */}
+      <section className="bg-white px-3 py-6 sm:px-6 lg:px-8 border-y">
 
-            <Link
-              href="/vendors"
-              className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
-            >
-              Browse suppliers
-            </Link>
-          </div>
-
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {featuredSuppliers.map((vendor) => (
-              <VendorCard key={vendor.id} vendor={vendor} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ===================== CATEGORIES ===================== */}
-      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-amber-600">
-              Categories for you
-            </p>
-            <h2 className="mt-2 text-3xl font-bold tracking-tight">
-              Explore by category
-            </h2>
-          </div>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-base font-semibold md:text-3xl">
+            Trusted suppliers
+          </h2>
 
           <Link
-            href="/categories"
-            className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-900 transition hover:bg-slate-50"
+            href="/vendors"
+            className="text-xs font-medium text-orange-500 md:text-sm"
           >
-            View categories
+            Browse
           </Link>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 md:gap-6">
+          {featuredSuppliers.map((vendor) => (
+            <VendorCard
+              key={vendor.id}
+              vendor={{
+                ...vendor,
+                company_name: vendor.company_name || 'Supplier',
+              }}
+            />
+          ))}
+        </div>
+      </section>
+
+      {/* ================= CATEGORIES ================= */}
+      <section className="mx-auto max-w-7xl px-3 py-6 sm:px-6 lg:px-8">
+
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-base font-semibold md:text-3xl">
+            Categories
+          </h2>
+
+          <Link
+            href="/categories"
+            className="text-xs font-medium text-orange-500 md:text-sm"
+          >
+            View all
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4 md:gap-6">
           {categories.map((category) => (
             <CategoryCard
               key={category.id}
@@ -278,6 +254,7 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+
     </main>
   )
 }
